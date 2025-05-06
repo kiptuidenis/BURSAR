@@ -14,25 +14,6 @@
                     <form method="POST" action="{{ url_for('user.update_profile') }}" id="profileForm">
                         {{ form.hidden_tag() }}
                         
-                        <!-- Personal Information -->
-                        <h5 class="mb-4">Personal Information</h5>
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="username" class="form-label">Username</label>
-                                    <input type="text" class="form-control" id="username" name="username" 
-                                           value="{{ current_user.username }}" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" name="email" 
-                                           value="{{ current_user.email }}" required>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- MPESA Settings -->
                         <h5 class="mb-4">MPESA Settings</h5>
                         <div class="row mb-4">
@@ -54,6 +35,25 @@
                                     <input type="time" class="form-control" id="transfer_time" name="transfer_time"
                                            value="{{ current_user.transfer_time or '06:00' }}" required>
                                     <small class="form-text text-muted">When should we send your daily allocation?</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Optional Contact Information -->
+                        <h5 class="mb-4">Optional Contact Information</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username (Optional)</label>
+                                    <input type="text" class="form-control" id="username" name="username" 
+                                           value="{{ current_user.username or '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email (Optional)</label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ current_user.email or '' }}">
                                 </div>
                             </div>
                         </div>

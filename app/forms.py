@@ -1,17 +1,8 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField
-from wtforms.validators import DataRequired, Email, Length, EqualTo, Regexp
+from wtforms.validators import DataRequired, Length, EqualTo, Regexp
 
 class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[
-        DataRequired(),
-        Length(min=3, max=20),
-        Regexp(r'^[A-Za-z0-9_]+$', message="Username can only contain letters, numbers, and underscores")
-    ])
-    email = StringField('Email', validators=[
-        DataRequired(),
-        Email()
-    ])
     phone = StringField('Phone Number', validators=[
         DataRequired(),
         Regexp(r'^[0-9]{9}$', message="Please enter 9 digits without country code")
@@ -31,11 +22,25 @@ class RegistrationForm(FlaskForm):
     ])
 
 class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[
+    phone = StringField('Phone Number', validators=[
         DataRequired(),
-        Email()
+        Regexp(r'^[0-9]{9}$', message="Please enter 9 digits without country code")
     ])
     password = PasswordField('Password', validators=[
         DataRequired()
     ])
     remember = BooleanField('Remember Me')
+
+class ProfileForm(FlaskForm):
+    phone_number = StringField('Phone Number', validators=[
+        DataRequired(),
+        Regexp(r'^[0-9]{9}$', message="Please enter 9 digits without country code")
+    ])
+    username = StringField('Username')
+    email = StringField('Email')
+    current_password = PasswordField('Current Password', validators=[DataRequired()])
+    new_password = PasswordField('New Password')
+    monthly_limit = StringField('Monthly Limit', validators=[DataRequired()])
+    daily_limit = StringField('Daily Limit', validators=[DataRequired()])
+    transfer_time = StringField('Transfer Time', validators=[DataRequired()])
+    enable_2fa = BooleanField('Enable Two-Factor Authentication')

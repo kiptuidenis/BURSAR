@@ -9,8 +9,8 @@ def load_user(id):
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    username = db.Column(db.String(64), unique=True, nullable=True)
+    email = db.Column(db.String(120), unique=True, nullable=True)
     password_hash = db.Column(db.String(128))
     phone_number = db.Column(db.String(15), unique=True, nullable=False)
     active = db.Column(db.Boolean, default=True)
@@ -32,7 +32,7 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
         
     def __repr__(self):
-        return f'<User {self.username}>'
+        return f'<User {self.phone_number}>'
 
 class BudgetCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
