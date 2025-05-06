@@ -19,7 +19,7 @@ class RegistrationForm(FlaskForm):
     password = PasswordField('Password', validators=[
         DataRequired(),
         Length(min=8),
-        Regexp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$',
+        Regexp(r'^(?=.*[A-Za-z])(?=.*\d).{8,}$',
                message="Password must be at least 8 characters long and include both letters and numbers")
     ])
     confirm_password = PasswordField('Confirm Password', validators=[

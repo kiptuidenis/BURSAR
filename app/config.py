@@ -1,15 +1,31 @@
 import os
 import secrets
 from datetime import timedelta
+from pathlib import Path
 
 class Config:
     # Flask Configuration
-    SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-change-in-production'
     
-    # SQLAlchemy Configuration
+    # Get the absolute path to the project root directory
     basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'instance', 'app.db')
+    
+    # Define instance path
+    instance_path = os.path.join(basedir, 'instance')
+    
+    # Ensure instance directory exists
+    try:
+        if not os.path.exists(instance_path):
+            # Create directory with full permissions
+            os.makedirs(instance_path, exist_ok=True)
+            print(f"Created instance directory at {instance_path}")
+    except Exception as e:
+        print(f"Error creating instance directory: {e}")
+        
+    # Database Configuration
+    db_path = os.path.join(instance_path, 'app.db')
+    SQLALCHEMY_DATABASE_URI = f'sqlite:///{db_path}'
+    print(f"Database path: {db_path}")  # Debug print
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Session Configuration
