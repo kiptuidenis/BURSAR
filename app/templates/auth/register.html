@@ -11,39 +11,72 @@
                 <form method="POST" action="{{ url_for('auth.register') }}" id="registrationForm">
                     {{ form.hidden_tag() }}
                     <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" required 
-                               pattern="[A-Za-z0-9_]{3,20}" title="Username must be 3-20 characters long and can only contain letters, numbers, and underscores">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control") }}
+                        {% if form.username.errors %}
+                            {% for error in form.username.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
                     </div>
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control") }}
+                        {% if form.email.errors %}
+                            {% for error in form.email.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="phone" class="form-label">MPESA Phone Number</label>
                         <div class="input-group">
                             <span class="input-group-text">+254</span>
-                            <input type="tel" class="form-control" id="phone" name="phone" required
-                                   pattern="[0-9]{9}" title="Please enter 9 digits without country code"
-                                   placeholder="7XXXXXXXX">
+                            {{ form.phone(class="form-control", placeholder="7XXXXXXXX") }}
                         </div>
-                        <small class="form-text text-muted">Enter your MPESA number without the country code</small>
+                        <small class="form-text text-muted">Enter your MPESA number without country code</small>
+                        {% if form.phone.errors %}
+                            {% for error in form.phone.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
                     </div>
                     <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required
-                               pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
-                               title="Password must be at least 8 characters long and include both letters and numbers">
+                        {{ form.password.label(class="form-label") }}
+                        <div class="input-group">
+                            {{ form.password(class="form-control") }}
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('password')">
+                                <i class="fas fa-eye" id="password-toggle-icon"></i>
+                            </button>
+                        </div>
+                        {% if form.password.errors %}
+                            {% for error in form.password.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
                     </div>
                     <div class="mb-3">
-                        <label for="confirm_password" class="form-label">Confirm Password</label>
-                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        {{ form.confirm_password.label(class="form-label") }}
+                        <div class="input-group">
+                            {{ form.confirm_password(class="form-control") }}
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('confirm_password')">
+                                <i class="fas fa-eye" id="confirm-password-toggle-icon"></i>
+                            </button>
+                        </div>
+                        {% if form.confirm_password.errors %}
+                            {% for error in form.confirm_password.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
                     </div>
                     <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
-                        <label class="form-check-label" for="terms">
-                            I agree to the <a href="{{ url_for('main.terms') }}" target="_blank">Terms of Service</a>
-                        </label>
+                        {{ form.terms(class="form-check-input") }}
+                        {{ form.terms.label(class="form-check-label") }}
+                        {% if form.terms.errors %}
+                            {% for error in form.terms.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Register</button>
                 </form>
@@ -59,6 +92,21 @@
 
 {% block extra_js %}
 <script>
+function togglePasswordVisibility(fieldId) {
+    const passwordInput = document.getElementById(fieldId);
+    const icon = document.getElementById(fieldId + '-toggle-icon');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
 document.getElementById('registrationForm').addEventListener('submit', function(event) {
     var password = document.getElementById('password');
     var confirm_password = document.getElementById('confirm_password');

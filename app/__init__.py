@@ -24,9 +24,11 @@ def create_app(config_class=Config):
     # Register blueprints
     from .routes.user_routes import auth_bp
     from .routes.dashboard_routes import dashboard_bp
+    from .routes.api_routes import api_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
+    app.register_blueprint(api_bp)
 
     # Add current_user to template context
     @app.context_processor
