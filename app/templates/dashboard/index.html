@@ -21,7 +21,7 @@
         <div class="card bg-success text-white">
             <div class="card-body">
                 <h5 class="card-title">Monthly Budget</h5>
-                <h2 class="card-text">KES {{ "%.2f"|format(current_user.monthly_limit or 0) }}</h2>
+                <h2 class="card-text" id="monthlyBudget">KES {{ "%.2f"|format(current_user.monthly_limit or 0) }}</h2>
                 <p class="mb-0">Total monthly allocation</p>
             </div>
         </div>

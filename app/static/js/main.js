@@ -50,6 +50,12 @@ class BudgetAPI {
 
 // Budget UI Management
 class BudgetUIManager {
+    static getDaysInCurrentMonth() {
+        const now = new Date();
+        // Get the last day of the current month
+        return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    }
+
     static async refreshCategoriesList() {
         const categories = await BudgetAPI.getCategories();
         const categoriesList = document.querySelector('#categoriesList');
@@ -64,10 +70,18 @@ class BudgetUIManager {
             categoriesList.appendChild(element);
         });
 
-        // Update total if element exists
+        // Update daily budget
         const totalElement = document.querySelector('#totalDailyBudget');
         if (totalElement) {
             totalElement.textContent = `KES ${totalDaily.toFixed(2)}`;
+        }
+
+        // Update monthly budget using actual days in current month
+        const monthlyElement = document.querySelector('#monthlyBudget');
+        if (monthlyElement) {
+            const daysInMonth = this.getDaysInCurrentMonth();
+            const monthlyTotal = totalDaily * daysInMonth;
+            monthlyElement.textContent = `KES ${monthlyTotal.toFixed(2)}`;
         }
     }
 
