@@ -51,7 +51,8 @@ body {
 }
 
 #categoriesList.list-group-flush {
-    max-height: 300px;
+    max-height: none;
+    overflow-y: visible;
 }
 
 #transactionsList.list-group-flush {
@@ -148,4 +149,26 @@ body {
     .card {
         margin-bottom: 1rem;
     }
+}
+
+/* Categories List Styles */
+#categoriesList.limited {
+    max-height: none;
+}
+
+#categoriesList.limited .list-group-item:nth-child(n+4) {
+    display: none !important;
+}
+
+#categoriesList:not(.limited) {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#categoriesList:not(.limited) ~ #categoriesViewAll .view-more-text {
+    content: 'Show Less';
+}
+
+#categoriesList:not(.limited) ~ #categoriesViewAll .fa-chevron-down {
+    transform: rotate(180deg);
 }

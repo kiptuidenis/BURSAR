@@ -64,6 +64,7 @@ class BudgetUIManager {
     static async refreshCategoriesList() {
         const categories = await BudgetAPI.getCategories();
         const categoriesList = document.querySelector('#categoriesList');
+        const viewAllButton = document.querySelector('#categoriesViewAll');
         if (!categoriesList) return;
 
         // Update current month name
@@ -83,6 +84,21 @@ class BudgetUIManager {
             categoriesList.appendChild(element);
         });
 
+        // Always enforce limited view by default
+        categoriesList.classList.add('limited');
+
+        // Show/hide view all button based on number of categories
+        if (viewAllButton) {
+            const hasMoreThanThree = categories.length > 3;
+            viewAllButton.classList.toggle('d-none', !hasMoreThanThree);
+            if (hasMoreThanThree) {
+                const viewMoreText = viewAllButton.querySelector('.view-more-text');
+                const icon = viewAllButton.querySelector('i');
+                viewMoreText.textContent = 'View All Categories';
+                icon.className = 'fas fa-chevron-down ms-1';
+            }
+        }
+
         // Update daily budget
         const totalElement = document.querySelector('#totalDailyBudget');
         if (totalElement) {
@@ -95,6 +111,23 @@ class BudgetUIManager {
             const remainingDays = this.getRemainingDaysInMonth();
             const monthlyTotal = totalDaily * remainingDays;
             monthlyElement.textContent = `KES ${monthlyTotal.toFixed(2)}`;
+        }
+    }
+
+    static toggleCategoriesView() {
+        const categoriesList = document.querySelector('#categoriesList');
+        const viewAllButton = document.querySelector('#categoriesViewAll');
+        const viewMoreText = viewAllButton.querySelector('.view-more-text');
+        const icon = viewAllButton.querySelector('i');
+
+        if (categoriesList.classList.contains('limited')) {
+            categoriesList.classList.remove('limited');
+            viewMoreText.textContent = 'Show Less';
+            icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+        } else {
+            categoriesList.classList.add('limited');
+            viewMoreText.textContent = 'View All Categories';
+            icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
         }
     }
 

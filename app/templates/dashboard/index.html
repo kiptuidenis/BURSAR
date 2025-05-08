@@ -45,9 +45,15 @@
                         <i class="fas fa-plus"></i> Add Category
                     </button>
                 </div>
-                <div class="card-body">
-                    <div id="categoriesList" class="list-group list-group-flush">
+                <div class="card-body position-relative">
+                    <div id="categoriesList" class="list-group list-group-flush limited">
                         <!-- Categories will be populated by JavaScript -->
+                    </div>
+                    <div id="categoriesViewAll" class="text-end mt-2 d-none">
+                        <button class="btn btn-link btn-sm text-muted" onclick="BudgetUIManager.toggleCategoriesView()">
+                            <span class="view-more-text">View All Categories</span>
+                            <i class="fas fa-chevron-down ms-1"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -116,6 +122,12 @@
         const monthElement = document.getElementById('currentMonth');
         if (monthElement) {
             monthElement.textContent = BudgetUIManager.getCurrentMonthName();
+        }
+
+        // Initialize categories list in limited view
+        const categoriesList = document.getElementById('categoriesList');
+        if (categoriesList) {
+            categoriesList.classList.add('limited');
         }
 
         // Clear form when modal is hidden
