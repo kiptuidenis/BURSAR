@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Smart Budget - Take Control of Your Daily Spending{% endblock %}
+{% block title %}Bursar - Take Control of Your Daily Spending{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -26,7 +26,7 @@
     <!-- Features Section -->
     <div class="row py-5">
         <div class="col-12 text-center mb-5">
-            <h2 class="display-5 fw-bold">Why Choose Smart Budget?</h2>
+            <h2 class="display-5 fw-bold">Why Choose Bursar?</h2>
         </div>
         <div class="col-md-4 mb-4 fade-in">
             <div class="card h-100 border-0 shadow-sm">
@@ -96,7 +96,7 @@
     <div class="row py-5 text-center">
         <div class="col-lg-8 mx-auto">
             <h2 class="display-5 fw-bold mb-4">Ready to Take Control?</h2>
-            <p class="lead mb-4">Join thousands of users who are managing their finances better with Smart Budget.</p>
+            <p class="lead mb-4">Join thousands of users who are managing their finances better with Bursar.</p>
             {% if not current_user.is_authenticated %}
                 <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-5">Get Started Now</a>
             {% else %}
