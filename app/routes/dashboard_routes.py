@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app import db
-from app.models import User
+from app.models import User, BudgetCategory
 from app.forms import ProfileForm
 
 dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
@@ -10,12 +10,17 @@ dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 @dashboard_bp.route('/')
 @login_required
 def index():
+    categories = BudgetCategory.query.filter_by(
+        user_id=current_user.id,
+        active=True
+    ).all()
+    
     return render_template('dashboard/index.html',
                          daily_amount=current_user.daily_limit,
                          monthly_budget=current_user.monthly_limit,
                          balance=current_user.monthly_limit,  # This will be updated with actual balance calculation
-                         categories=[],  # This will be populated when we implement budget categories
-                         recent_transactions=[])  # This will be populated when we implement transactions
+                         categories=categories,
+                         recent_transactions=[])
 
 @dashboard_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
