@@ -15,6 +15,7 @@ body {
     border: none;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease-in-out;
+    height: 100%;
 }
 
 .card:hover {
@@ -24,6 +25,55 @@ body {
 /* Dashboard Overview Cards */
 .card.bg-primary, .card.bg-success, .card.bg-info {
     background: linear-gradient(45deg, rgba(0,0,0,0.1) 0%, rgba(255,255,255,0.1) 100%);
+}
+
+/* Dashboard Specific Styles */
+.balance-container {
+    transition: filter 0.3s ease;
+}
+
+.balance-container.hidden {
+    filter: blur(8px);
+}
+
+.btn-link {
+    color: #6c757d;
+    text-decoration: none;
+}
+
+.btn-link:hover {
+    color: #0d6efd;
+}
+
+.list-group-flush {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#categoriesList.list-group-flush {
+    max-height: 300px;
+}
+
+#transactionsList.list-group-flush {
+    max-height: 500px;
+}
+
+/* Scrollbar styling */
+.list-group-flush::-webkit-scrollbar {
+    width: 6px;
+}
+
+.list-group-flush::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.list-group-flush::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.list-group-flush::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 
 /* Form Styles */

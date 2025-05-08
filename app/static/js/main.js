@@ -50,16 +50,29 @@ class BudgetAPI {
 
 // Budget UI Management
 class BudgetUIManager {
-    static getDaysInCurrentMonth() {
-        const now = new Date();
-        // Get the last day of the current month
-        return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    static getRemainingDaysInMonth() {
+        const today = new Date();
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        const remainingDays = lastDay.getDate() - today.getDate() + 1; // +1 to include today
+        return remainingDays;
+    }
+
+    static getCurrentMonthName() {
+        return new Date().toLocaleString('en-US', { month: 'long' });
     }
 
     static async refreshCategoriesList() {
         const categories = await BudgetAPI.getCategories();
         const categoriesList = document.querySelector('#categoriesList');
         if (!categoriesList) return;
+
+        // Update current month name
+        const monthElement = document.querySelector('#currentMonth');
+        if (monthElement) {
+            const today = new Date();
+            const formattedDate = `${this.getCurrentMonthName()} (${today.getDate()}-${new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()})`;
+            monthElement.textContent = formattedDate;
+        }
 
         categoriesList.innerHTML = '';
         let totalDaily = 0;
@@ -76,11 +89,11 @@ class BudgetUIManager {
             totalElement.textContent = `KES ${totalDaily.toFixed(2)}`;
         }
 
-        // Update monthly budget using actual days in current month
+        // Update monthly budget using remaining days in current month
         const monthlyElement = document.querySelector('#monthlyBudget');
         if (monthlyElement) {
-            const daysInMonth = this.getDaysInCurrentMonth();
-            const monthlyTotal = totalDaily * daysInMonth;
+            const remainingDays = this.getRemainingDaysInMonth();
+            const monthlyTotal = totalDaily * remainingDays;
             monthlyElement.textContent = `KES ${monthlyTotal.toFixed(2)}`;
         }
     }
@@ -259,6 +272,20 @@ function checkDepositStatus(checkoutRequestID) {
         console.error('Error:', error);
         showAlert('Failed to check deposit status', 'danger');
     });
+}
+
+// Balance visibility toggle
+function toggleBalanceVisibility() {
+    const balanceContainer = document.querySelector('.balance-container');
+    const icon = document.getElementById('balanceToggleIcon');
+    
+    if (balanceContainer.classList.contains('hidden')) {
+        balanceContainer.classList.remove('hidden');
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    } else {
+        balanceContainer.classList.add('hidden');
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    }
 }
 
 // Form Validation
