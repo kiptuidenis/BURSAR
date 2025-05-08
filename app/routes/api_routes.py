@@ -25,6 +25,68 @@ def mpesa_result():
     
     return jsonify({'status': 'success'}), 200
 
+@api_bp.route('/mpesa/deposit', methods=['POST'])
+@login_required
+def initiate_deposit():
+    """Initiate M-Pesa STK Push for deposit"""
+    mpesa_service = MPESAService()
+    
+    try:
+        result = mpesa_service.initiate_stk_push(
+            phone_number=current_user.phone_number,
+            amount=0  # Amount will be entered by user on their phone
+        )
+        
+        if result.get('success'):
+            return jsonify({
+                'success': True,
+                'message': 'Please check your phone for the M-Pesa prompt',
+                'checkoutRequestID': result.get('CheckoutRequestID')
+            })
+        
+        return jsonify({
+            'success': False,
+            'message': result.get('error', 'Failed to initiate deposit')
+        }), 400
+        
+    except Exception as e:
+        current_app.logger.error(f"Error initiating deposit: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'An error occurred while processing your request'
+        }), 500
+
+@api_bp.route('/mpesa/deposit/status/<checkout_request_id>')
+@login_required
+def check_deposit_status(checkout_request_id):
+    """Check status of an STK Push request"""
+    mpesa_service = MPESAService()
+    
+    try:
+        result = mpesa_service.check_stk_push_status(checkout_request_id)
+        
+        if result.get('pending'):
+            return jsonify({'pending': True})
+            
+        if result.get('ResultCode') == '0':
+            # Transaction successful
+            return jsonify({
+                'success': True,
+                'message': 'Deposit completed successfully'
+            })
+            
+        return jsonify({
+            'success': False,
+            'message': result.get('ResultDesc', 'Transaction failed')
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error checking deposit status: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'An error occurred while checking the transaction status'
+        }), 500
+
 @api_bp.route('/budget/categories', methods=['GET', 'POST'])
 @login_required
 def manage_categories():

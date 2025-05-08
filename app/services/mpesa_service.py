@@ -9,6 +9,8 @@ class MPESAService:
         self.consumer_key = current_app.config['MPESA_CONSUMER_KEY']
         self.consumer_secret = current_app.config['MPESA_CONSUMER_SECRET']
         self.api_url = current_app.config['MPESA_API_URL']
+        self.business_shortcode = current_app.config.get('MPESA_BUSINESS_SHORTCODE', '174379')
+        self.passkey = current_app.config.get('MPESA_PASSKEY', 'your-passkey-here')
         
     def _generate_auth_token(self):
         """Generate OAuth token for MPESA API"""
@@ -30,7 +32,99 @@ class MPESAService:
         except requests.exceptions.RequestException as e:
             current_app.logger.error(f"Error generating MPESA auth token: {str(e)}")
             raise
+
+    def _generate_password(self):
+        """Generate password for STK Push"""
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        string_to_encode = f"{self.business_shortcode}{self.passkey}{timestamp}"
+        return base64.b64encode(string_to_encode.encode()).decode('utf-8'), timestamp
             
+    def initiate_stk_push(self, phone_number, amount=0):
+        """Initiate STK Push prompt to customer's phone"""
+        token = self._generate_auth_token()
+        password, timestamp = self._generate_password()
+        
+        headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json'
+        }
+        
+        payload = {
+            "BusinessShortCode": self.business_shortcode,
+            "Password": password,
+            "Timestamp": timestamp,
+            "TransactionType": "CustomerPayBillOnline",
+            "Amount": str(amount),
+            "PartyA": phone_number.replace('+', ''),
+            "PartyB": self.business_shortcode,
+            "PhoneNumber": phone_number.replace('+', ''),
+            "CallBackURL": f"{current_app.config['BASE_URL']}/api/mpesa/stk/callback",
+            "AccountReference": "Bursar Deposit",
+            "TransactionDesc": "Deposit to Bursar account" 
+        }
+        
+        try:
+            response = requests.post(
+                f"{self.api_url}/mpesa/stkpush/v1/processrequest",
+                json=payload,
+                headers=headers
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            if result.get('ResponseCode') == '0':
+                return {
+                    'success': True,
+                    'CheckoutRequestID': result.get('CheckoutRequestID')
+                }
+            
+            return {
+                'success': False,
+                'error': result.get('ResponseDescription', 'Failed to initiate STK push')
+            }
+            
+        except requests.exceptions.RequestException as e:
+            current_app.logger.error(f"Error initiating STK push: {str(e)}")
+            raise
+            
+    def check_stk_push_status(self, checkout_request_id):
+        """Check the status of an STK Push request"""
+        token = self._generate_auth_token()
+        password, timestamp = self._generate_password()
+        
+        headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json'
+        }
+        
+        payload = {
+            "BusinessShortCode": self.business_shortcode,
+            "Password": password,
+            "Timestamp": timestamp,
+            "CheckoutRequestID": checkout_request_id
+        }
+        
+        try:
+            response = requests.post(
+                f"{self.api_url}/mpesa/stkpushquery/v1/query",
+                json=payload,
+                headers=headers
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            if result.get('ResponseCode') == '0':
+                return {
+                    'ResultCode': result.get('ResultCode'),
+                    'ResultDesc': result.get('ResultDesc')
+                }
+            
+            return {'pending': True}
+            
+        except requests.exceptions.RequestException as e:
+            current_app.logger.error(f"Error checking STK push status: {str(e)}")
+            raise
+    
     def initiate_b2c_payment(self, phone_number, amount, reason="Daily Budget Transfer"):
         """Initiate Business to Customer (B2C) payment"""
         token = self._generate_auth_token()

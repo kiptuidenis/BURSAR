@@ -8,7 +8,7 @@
 
 <!-- Overview Cards -->
 <div class="row mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card bg-primary text-white">
             <div class="card-body">
                 <h5 class="card-title">Today's Budget</h5>
@@ -17,7 +17,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card bg-success text-white">
             <div class="card-body">
                 <h5 class="card-title">Monthly Budget</h5>
@@ -26,12 +26,22 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card bg-info text-white">
             <div class="card-body">
                 <h5 class="card-title">Next Transfer</h5>
                 <h2 class="card-text">{{ current_user.transfer_time.strftime('%I:%M %p') }}</h2>
                 <p class="mb-0">Daily transfer time</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <h5 class="card-title">Quick Deposit</h5>
+                <button class="btn btn-light btn-lg mt-2" onclick="initiateDeposit()">
+                    <i class="fas fa-wallet me-2"></i>Deposit
+                </button>
             </div>
         </div>
     </div>

@@ -204,6 +204,49 @@ class MPESAManager {
     }
 }
 
+// Deposit Function
+function initiateDeposit() {
+    // Call STK Push API
+    fetchWithCSRF('/api/mpesa/deposit', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('Please check your phone for the M-Pesa prompt', 'info');
+            // Check transaction status after a delay
+            setTimeout(() => checkDepositStatus(result.checkoutRequestID), 5000);
+        } else {
+            showAlert('Failed to initiate deposit: ' + result.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Failed to initiate deposit. Please try again.', 'danger');
+    });
+}
+
+function checkDepositStatus(checkoutRequestID) {
+    fetchWithCSRF(`/api/mpesa/deposit/status/${checkoutRequestID}`)
+    .then(response => response.json())
+    .then(result => {
+        if (result.pending) {
+            // Check again after 5 seconds
+            setTimeout(() => checkDepositStatus(checkoutRequestID), 5000);
+        } else if (result.success) {
+            showAlert('Deposit successful!', 'success');
+            // Reload transactions list
+            BudgetUIManager.loadTransactions();
+        } else {
+            showAlert('Deposit failed: ' + result.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Failed to check deposit status', 'danger');
+    });
+}
+
 // Form Validation
 document.addEventListener('DOMContentLoaded', () => {
     // Phone number validation
