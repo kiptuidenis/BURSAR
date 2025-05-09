@@ -140,14 +140,29 @@ class BudgetUIManager {
                 <small class="text-muted">Daily: KES ${category.daily_amount.toFixed(2)}</small>
             </div>
             <div class="category-actions">
-                <button class="category-action-btn edit" onclick="BudgetUIManager.editCategory(${category.id})" title="Edit category">
-                    <i class="fas fa-pencil"></i>
+                <button type="button" class="category-action-btn edit" data-category-id="${category.id}" title="Edit category">
+                    <i class="fas fa-pencil-alt"></i>
                 </button>
-                <button class="category-action-btn delete" onclick="BudgetUIManager.deleteCategory(${category.id})" title="Delete category">
+                <button type="button" class="category-action-btn delete" data-category-id="${category.id}" title="Delete category">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
         `;
+
+        // Add event listeners for the buttons
+        const editBtn = div.querySelector('.category-action-btn.edit');
+        const deleteBtn = div.querySelector('.category-action-btn.delete');
+
+        editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.editCategory(category.id);
+        });
+
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.deleteCategory(category.id);
+        });
+
         return div;
     }
 
