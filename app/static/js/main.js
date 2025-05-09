@@ -133,17 +133,17 @@ class BudgetUIManager {
 
     static _createCategoryElement(category) {
         const div = document.createElement('div');
-        div.className = 'list-group-item d-flex justify-content-between align-items-center';
+        div.className = 'list-group-item category-item';
         div.innerHTML = `
-            <div>
+            <div class="category-info">
                 <h6 class="mb-0">${category.name}</h6>
                 <small class="text-muted">Daily: KES ${category.daily_amount.toFixed(2)}</small>
             </div>
-            <div>
-                <button class="btn btn-sm btn-outline-primary me-1" onclick="BudgetUIManager.editCategory(${category.id})">
-                    <i class="fas fa-edit"></i>
+            <div class="category-actions">
+                <button class="category-action-btn edit" onclick="BudgetUIManager.editCategory(${category.id})" title="Edit category">
+                    <i class="fas fa-pencil"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" onclick="BudgetUIManager.deleteCategory(${category.id})">
+                <button class="category-action-btn delete" onclick="BudgetUIManager.deleteCategory(${category.id})" title="Delete category">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>

@@ -100,6 +100,9 @@ body {
     border-left: none;
     border-right: none;
     border-radius: 0;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .list-group-item:first-child {
@@ -108,6 +111,59 @@ body {
 
 .list-group-item:last-child {
     border-bottom: none;
+}
+
+/* Category item specific styles */
+.category-item {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.category-item .category-info {
+    flex-grow: 1;
+}
+
+.category-actions {
+    opacity: 0;
+    transform: translateX(10px);
+    transition: all 0.3s ease;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.category-item:hover .category-actions {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.category-action-btn {
+    padding: 0.25rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: #6c757d;
+    transition: all 0.2s ease;
+}
+
+.category-action-btn:hover {
+    background: rgba(108, 117, 125, 0.1);
+}
+
+.category-action-btn.edit:hover {
+    color: #0d6efd;
+    background: rgba(13, 110, 253, 0.1);
+}
+
+.category-action-btn.delete:hover {
+    color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
 }
 
 /* Modal Styles */
