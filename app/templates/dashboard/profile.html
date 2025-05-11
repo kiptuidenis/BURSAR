@@ -60,19 +60,34 @@
 
                         <!-- Budget Settings -->
                         <h5 class="mb-4">Budget Settings</h5>
+                        {% if not current_user.can_modify_budget() %}
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-lock me-2"></i>
+                            Your budget is locked until {{ current_user.next_budget_date.strftime('%B 1, %Y') }}.
+                            You can modify it on the first day of next month.
+                        </div>
+                        {% endif %}
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="monthly_limit" class="form-label">Monthly Budget Limit (KES)</label>
                                     <input type="number" class="form-control" id="monthly_limit" name="monthly_limit"
-                                           value="{{ current_user.monthly_limit or 0 }}" min="0" step="100" required>
+                                           value="{{ current_user.monthly_limit or 0 }}" min="0" step="100" required
+                                           {% if not current_user.can_modify_budget() %}disabled{% endif %}>
+                                    {% if not current_user.can_modify_budget() %}
+                                    <small class="form-text text-muted">Budget modifications are locked for this month</small>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="daily_limit" class="form-label">Maximum Daily Transfer (KES)</label>
                                     <input type="number" class="form-control" id="daily_limit" name="daily_limit"
-                                           value="{{ current_user.daily_limit or 0 }}" min="0" step="50" required>
+                                           value="{{ current_user.daily_limit or 0 }}" min="0" step="50" required
+                                           {% if not current_user.can_modify_budget() %}disabled{% endif %}>
+                                    {% if not current_user.can_modify_budget() %}
+                                    <small class="form-text text-muted">Budget modifications are locked for this month</small>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

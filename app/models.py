@@ -19,6 +19,8 @@ class User(UserMixin, db.Model):
     transfer_time = db.Column(db.Time, default=datetime.strptime('06:00', '%H:%M').time())
     monthly_limit = db.Column(db.Float, default=0.0)
     daily_limit = db.Column(db.Float, default=0.0)
+    budget_lock_date = db.Column(db.DateTime, nullable=True)  # When the budget was last set
+    next_budget_date = db.Column(db.DateTime, nullable=True)  # When budget can be modified again
     two_factor_enabled = db.Column(db.Boolean, default=False)
     
     # Timestamps
@@ -30,6 +32,28 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def can_modify_budget(self):
+        """Check if user can modify their budget"""
+        if not self.next_budget_date:
+            return True
+        return datetime.utcnow() >= self.next_budget_date
+
+    def set_budget(self, monthly_limit, daily_limit):
+        """Set budget and lock it until next month"""
+        if not self.can_modify_budget():
+            return False, "Budget cannot be modified until next month"
+        
+        now = datetime.utcnow()
+        next_month = datetime(now.year + (now.month == 12), 
+                            (now.month % 12) + 1, 
+                            1)  # First day of next month
+        
+        self.monthly_limit = monthly_limit
+        self.daily_limit = daily_limit
+        self.budget_lock_date = now
+        self.next_budget_date = next_month
+        return True, "Budget set successfully"
         
     def __repr__(self):
         return f'<User {self.phone_number}>'

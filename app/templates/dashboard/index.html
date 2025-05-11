@@ -7,6 +7,24 @@
 <div id="alertContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 1050"></div>
 
 <div class="container">
+    {% if not current_user.monthly_limit or not current_user.daily_limit %}
+    <!-- Budget Setup Alert -->
+    <div class="alert alert-info mb-4">
+        <div class="d-flex align-items-center">
+            <div class="me-3">
+                <i class="fas fa-info-circle fa-2x"></i>
+            </div>
+            <div>
+                <h4 class="alert-heading mb-2">Set Up Your Budget</h4>
+                <p class="mb-0">Welcome to Bursar! Please set up your monthly and daily budget limits to start managing your finances.</p>
+            </div>
+            <div class="ms-auto">
+                <a href="{{ url_for('dashboard.profile') }}" class="btn btn-primary">Set Budget</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Top Row with Two Tiles -->
     <div class="row mb-4">
         <!-- Month and Balance Tile -->

@@ -29,13 +29,16 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
     
-    form = RegistrationForm()
+    form = RegistrationForm()  # Corrected indentation
     if form.validate_on_submit():
+        print("Form validated successfully")  # Debug print
         phone = '+254' + form.phone.data
         if User.query.filter_by(phone_number=phone).first():
+            print(f"Phone number {phone} already exists")  # Debug print
             flash('Phone number already registered', 'danger')
             return render_template('auth/register.html', form=form)
         
+        # This block should be indented under "if form.validate_on_submit():"
         user = User(phone_number=phone)
         user.set_password(form.password.data)
         
@@ -44,6 +47,9 @@ def register():
         
         flash('Registration successful! Please login.', 'success')
         return redirect(url_for('auth.login'))
+    else: # This else corresponds to "if form.validate_on_submit():"
+        print("Form validation failed")  # Debug print
+        print("Form errors:", form.errors)  # Debug print to show validation errors
     
     return render_template('auth/register.html', form=form)
 

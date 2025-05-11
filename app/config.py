@@ -25,7 +25,6 @@ class Config:
     # Database Configuration
     db_path = os.path.join(instance_path, 'app.db')
     SQLALCHEMY_DATABASE_URI = f'sqlite:///{db_path}'
-    print(f"Database path: {db_path}")  # Debug print
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Session Configuration
@@ -35,6 +34,9 @@ class Config:
     MPESA_CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY')
     MPESA_CONSUMER_SECRET = os.environ.get('MPESA_CONSUMER_SECRET')
     MPESA_API_URL = os.environ.get('MPESA_API_URL', 'https://sandbox.safaricom.co.ke')
+    MPESA_BUSINESS_SHORTCODE = os.environ.get('MPESA_BUSINESS_SHORTCODE')
+    MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY')
+    MPESA_SECURITY_CREDENTIAL = os.environ.get('MPESA_SECURITY_CREDENTIAL')
     
     # Security Configuration
     WTF_CSRF_ENABLED = True

@@ -9,8 +9,9 @@ class MPESAService:
         self.consumer_key = current_app.config['MPESA_CONSUMER_KEY']
         self.consumer_secret = current_app.config['MPESA_CONSUMER_SECRET']
         self.api_url = current_app.config['MPESA_API_URL']
-        self.business_shortcode = current_app.config.get('MPESA_BUSINESS_SHORTCODE', '174379')
-        self.passkey = current_app.config.get('MPESA_PASSKEY', 'your-passkey-here')
+        self.business_shortcode = current_app.config['MPESA_BUSINESS_SHORTCODE']
+        self.passkey = current_app.config['MPESA_PASSKEY']
+        self.security_credential = current_app.config['MPESA_SECURITY_CREDENTIAL']
         
     def _generate_auth_token(self):
         """Generate OAuth token for MPESA API"""
@@ -136,10 +137,10 @@ class MPESAService:
         
         payload = {
             "InitiatorName": "testapi",
-            "SecurityCredential": "your-security-credential",
+            "SecurityCredential": self.security_credential,
             "CommandID": "BusinessPayment",
             "Amount": str(amount),
-            "PartyA": "your-shortcode",
+            "PartyA": self.business_shortcode,
             "PartyB": phone_number,
             "Remarks": reason,
             "QueueTimeOutURL": f"{current_app.config['BASE_URL']}/api/mpesa/timeout",
@@ -165,6 +166,9 @@ class MPESAService:
                 mpesa_reference=result['ConversationID'],
                 status='pending'
             )
+            
+            db.session.add(transaction)
+            db.session.commit()
             
             return {
                 'success': True,

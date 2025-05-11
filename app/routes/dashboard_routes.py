@@ -40,11 +40,21 @@ def profile():
             flash('This phone number is already registered', 'danger')
             return redirect(url_for('dashboard.profile'))
 
+        # Handle budget changes separately with locking logic
+        if float(form.monthly_limit.data) != current_user.monthly_limit or \
+           float(form.daily_limit.data) != current_user.daily_limit:
+            success, message = current_user.set_budget(
+                monthly_limit=float(form.monthly_limit.data),
+                daily_limit=float(form.daily_limit.data)
+            )
+            if not success:
+                flash(message, 'danger')
+                return redirect(url_for('dashboard.profile'))
+
+        # Update non-budget fields
         current_user.phone_number = phone
         current_user.username = form.username.data
         current_user.email = form.email.data
-        current_user.monthly_limit = float(form.monthly_limit.data)
-        current_user.daily_limit = float(form.daily_limit.data)
         current_user.transfer_time = datetime.strptime(form.transfer_time.data, '%H:%M').time()
         current_user.two_factor_enabled = form.enable_2fa.data
 

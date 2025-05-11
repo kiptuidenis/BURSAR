@@ -8,8 +8,11 @@
         <div class="card shadow">
             <div class="card-body">
                 <h2 class="text-center mb-4">Create Account</h2>
+                
                 <form method="POST" action="{{ url_for('auth.register') }}" id="registrationForm">
                     {{ form.hidden_tag() }}
+                    
+                    <!-- Phone Number Field -->
                     <div class="mb-3">
                         <label for="phone" class="form-label">MPESA Phone Number</label>
                         <div class="input-group">
@@ -23,8 +26,10 @@
                             {% endfor %}
                         {% endif %}
                     </div>
+
+                    <!-- Password Fields -->
                     <div class="mb-3">
-                        {{ form.password.label(class="form-label") }}
+                        <label for="password" class="form-label">Password</label>
                         <div class="input-group">
                             {{ form.password(class="form-control") }}
                             <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('password')">
@@ -37,13 +42,13 @@
                             {% endfor %}
                         {% endif %}
                     </div>
+
                     <div class="mb-3">
-                        {{ form.confirm_password.label(class="form-label") }}
+                        <label for="confirm_password" class="form-label">Confirm Password</label>
                         <div class="input-group">
                             {{ form.confirm_password(class="form-control") }}
                             <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('confirm_password')">
-                                <i class="fas fa-eye" id="confirm-password-toggle-icon"></i>
-                            </button>
+                                <i class="fas fa-eye" id="confirm-password-toggle-icon"></i>                            </button>
                         </div>
                         {% if form.confirm_password.errors %}
                             {% for error in form.confirm_password.errors %}
@@ -51,16 +56,23 @@
                             {% endfor %}
                         {% endif %}
                     </div>
-                    <div class="mb-3 form-check">
-                        {{ form.terms(class="form-check-input") }}
-                        {{ form.terms.label(class="form-check-label") }}
+
+                    <!-- Terms Field -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.terms(class="form-check-input") }}
+                            <label class="form-check-label" for="terms">
+                                I agree to the Terms of Service
+                            </label>
+                        </div>
                         {% if form.terms.errors %}
                             {% for error in form.terms.errors %}
                                 <div class="text-danger">{{ error }}</div>
                             {% endfor %}
                         {% endif %}
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Register</button>
+
+                    <button type="submit" class="btn btn-primary w-100">Create Account</button>
                 </form>
                 <hr>
                 <div class="text-center">
@@ -75,30 +87,16 @@
 {% block extra_js %}
 <script>
 function togglePasswordVisibility(fieldId) {
-    const passwordInput = document.getElementById(fieldId);
+    const passwordField = document.getElementById(fieldId);
     const icon = document.getElementById(fieldId + '-toggle-icon');
     
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
     } else {
-        passwordInput.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
+        passwordField.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
     }
 }
-
-document.getElementById('registrationForm').addEventListener('submit', function(event) {
-    var password = document.getElementById('password');
-    var confirm_password = document.getElementById('confirm_password');
-    
-    if (password.value !== confirm_password.value) {
-        event.preventDefault();
-        alert('Passwords do not match!');
-        confirm_password.value = '';
-        confirm_password.focus();
-    }
-});
 </script>
 {% endblock %}
