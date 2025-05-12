@@ -1,6 +1,7 @@
-from flask import Flask
+from flask import Flask, jsonify
 import sys
 import os
+import json
 
 # Add the parent directory to sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -20,41 +21,51 @@ class VercelConfig:
     # Flask settings
     DEBUG = False
     WTF_CSRF_ENABLED = False  # Disable CSRF for serverless environment
+    
+    # Disable file system operations that cause errors in serverless environment
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'connect_args': {'check_same_thread': False}
+    }
 
 # Create Flask application with Vercel config
 app = create_app(VercelConfig)
 
-# Vercel serverless function handler
-from flask import Response
-import json
-
-def handler(request):
+# Simple HTTP handler function - this is critical for Vercel serverless
+def handler(event, context):
     """
     Serverless function handler for Vercel
     
-    This function adapts the Flask app to work with Vercel's serverless environment
+    This is a simple handler that returns the Flask WSGI app
     """
-    # Get path and method from request
-    path = request.get('path', '/')
-    http_method = request.get('method', 'GET')
-    
-    # Prepare headers and body for test_client
-    headers = request.get('headers', {})
-    body = request.get('body', '') 
-    
-    # Handle the request with Flask's test client
-    with app.test_client() as test_client:
-        # Invoke the Flask application
-        response = test_client.open(
-            path, 
-            method=http_method,
-            headers=headers,
-            data=body
-        )
+    try:
+        # For direct invocation and health checks
+        if event.get('path') == '/api/health':
+            return {
+                "statusCode": 200,
+                "body": json.dumps({
+                    "status": "ok",
+                    "message": "API is running"
+                }),
+                "headers": {
+                    "Content-Type": "application/json"
+                }
+            }
+            
+        # Normally just return the Flask app
+        return app
         
-        # Prepare the response for Vercel
+    except Exception as e:
+        # Return error information to help with debugging
+        error_msg = str(e)
         return {
-            "statusCode": response.status_code,
-            "headers": dict(response.headers),
+            "statusCode": 500,
+            "body": json.dumps({
+                "error": error_msg,
+                "message": "An error occurred in the handler function"
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }
             "body": response.data.decode('utf-8')
         }

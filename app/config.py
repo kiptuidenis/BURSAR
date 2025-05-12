@@ -10,21 +10,28 @@ class Config:
     # Get the absolute path to the project root directory
     basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     
+    # Check if running in Vercel environment
+    is_vercel = os.environ.get('VERCEL') == '1'
+    
     # Define instance path
     instance_path = os.path.join(basedir, 'instance')
     
-    # Ensure instance directory exists
-    try:
-        if not os.path.exists(instance_path):
-            # Create directory with full permissions
-            os.makedirs(instance_path, exist_ok=True)
-            print(f"Created instance directory at {instance_path}")
-    except Exception as e:
-        print(f"Error creating instance directory: {e}")
-        
-    # Database Configuration
-    db_path = os.path.join(instance_path, 'app.db')
-    SQLALCHEMY_DATABASE_URI = f'sqlite:///{db_path}'
+    # Only try to create directory if not in Vercel environment
+    if not is_vercel:
+        try:
+            if not os.path.exists(instance_path):
+                # Create directory with full permissions
+                os.makedirs(instance_path, exist_ok=True)
+                print(f"Created instance directory at {instance_path}")
+        except Exception as e:
+            print(f"Error creating instance directory: {e}")
+    
+    # Database Configuration - use in-memory SQLite for Vercel
+    if is_vercel:
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    else:
+        db_path = os.path.join(instance_path, 'app.db')
+        SQLALCHEMY_DATABASE_URI = f'sqlite:///{db_path}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Session Configuration

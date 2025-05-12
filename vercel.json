@@ -12,6 +12,7 @@
     { "src": "/(.*)", "dest": "/api/index.py" }
   ],
   "env": {
-    "PYTHONPATH": "."
+    "PYTHONPATH": ".",
+    "VERCEL": "1"
   }
 }

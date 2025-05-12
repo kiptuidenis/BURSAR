@@ -4,6 +4,7 @@ from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 from .config import Config
+import os
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -14,10 +15,18 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # Check if we're in Vercel environment
+    is_vercel = app.config.get('VERCEL', False) or 'VERCEL' in os.environ
+    
     # Initialize Flask extensions
     db.init_app(app)
     login_manager.init_app(app)
-    migrate.init_app(app, db)
+    
+    # Only initialize migrate in non-Vercel environments
+    if not is_vercel:
+        migrate.init_app(app, db)
+        
+    # Initialize CSRF with config-dependent settings
     csrf.init_app(app)
 
     # Set up login configuration
