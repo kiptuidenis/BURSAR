@@ -1,5 +1,8 @@
-from run import app
+from app import create_app
 
-# For WSGI servers like Gunicorn
+# Create app instance
+app = create_app()
+
+# For WSGI servers
 if __name__ == "__main__":
     app.run()
