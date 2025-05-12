@@ -5,7 +5,19 @@ from app import db, login_manager
 
 @login_manager.user_loader
 def load_user(id):
-    return User.query.get(int(id))
+    try:
+        # Try to get user by ID
+        user = User.query.get(int(id))
+        if user:
+            return user
+            
+        # If not found, try to recover from session
+        from flask import session
+        if session and 'user_id' in session:
+            return User.query.get(int(session['user_id']))
+    except Exception as e:
+        print(f"Error loading user: {e}")
+    return None
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)

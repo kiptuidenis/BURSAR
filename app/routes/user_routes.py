@@ -13,14 +13,38 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        phone = '+254' + form.phone.data
+        print("Login form submitted successfully") # Debug log
+        # Handle phone number with or without country code
+        phone = form.phone.data
+        if not phone.startswith('+'):
+            phone = '+254' + phone.lstrip('0')
+        
         user = User.query.filter_by(phone_number=phone).first()
+        
         if user and user.check_password(form.password.data):
-            login_user(user, remember=form.remember.data)
+            # Always use remember=True for serverless environments
+            remember = True
+                
+            # Log the user in with strong session
+            login_successful = login_user(user, remember=remember)
+            print(f"Login attempt result: {login_successful}") # Debug log
+            
+            # Store additional auth info in session for redundancy
+            from flask import session
+            session['user_id'] = user.id
+            session['authenticated'] = True
+            session['user_phone'] = phone
+            session.permanent = True
+            
+            print(f"User {user.id} logged in successfully with session: {session.items()}") # Debug log
+            
             next_page = request.args.get('next')
             return redirect(next_page or url_for('dashboard.index'))
         
+        print(f"Login failed for phone: {phone}") # Debug log
         flash('Invalid phone number or password', 'danger')
+    else:
+        print("Login form validation failed") # Debug log
     
     return render_template('auth/login.html', form=form)
 

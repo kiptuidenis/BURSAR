@@ -23,10 +23,28 @@ class VercelConfig:
     DEBUG = False
     WTF_CSRF_ENABLED = False  # Disable CSRF for serverless environment
     
+    # Session settings for serverless
+    SESSION_TYPE = 'filesystem'
+    PERMANENT_SESSION_LIFETIME = 3600 * 24 * 30  # 30 days in seconds
+    SESSION_PERMANENT = True
+    SESSION_USE_SIGNER = True
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    
+    # Remember me cookie settings
+    REMEMBER_COOKIE_DURATION = 3600 * 24 * 30  # 30 days in seconds
+    REMEMBER_COOKIE_SECURE = True
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = 'Lax'
+    
     # Disable file system operations that cause errors in serverless environment
     SQLALCHEMY_ENGINE_OPTIONS = {
         'connect_args': {'check_same_thread': False}
     }
+    
+    # Vercel flag
+    VERCEL = True
 
 # Create Flask application with Vercel config
 app = create_app(VercelConfig)
@@ -54,8 +72,7 @@ except Exception as e:
     # This is critical, but we'll let the app continue and see if it works
 
 # Handler class for Vercel - This MUST be named 'handler'
-class handler(BaseHTTPRequestHandler):
-    def do_GET(self):
+class handler(BaseHTTPRequestHandler):    def do_GET(self):
         try:
             # In serverless context, the database is recreated for each request
             # So we need to ensure the tables exist
@@ -67,18 +84,42 @@ class handler(BaseHTTPRequestHandler):
                 print(f"Warning: Could not create tables for GET request: {db_err}")
                 # Continue anyway and see if it works
             
+            # Extract cookies from request headers
+            cookies = {}
+            if 'Cookie' in self.headers:
+                cookie_header = self.headers['Cookie']
+                cookie_parts = cookie_header.split('; ')
+                for part in cookie_parts:
+                    if '=' in part:
+                        name, value = part.split('=', 1)
+                        cookies[name] = value
+            
             # Use Flask test client to handle the request
             with app.test_client() as test_client:
-                # Map the path from the request to Flask
-                response = test_client.get(self.path)
+                # Set cookies in the test client
+                for name, value in cookies.items():
+                    test_client.set_cookie('', name, value)
                 
+                # Map the path from the request to Flask
+                response = test_client.get(
+                    self.path, 
+                    headers={k: v for k, v in self.headers.items() if k not in ('Cookie', 'Host', 'Content-Length')}
+                )
+                
+                # Send response with status code
                 self.send_response(response.status_code)
+                
+                # Send headers, including cookies
                 for header, value in response.headers:
-                    if header.lower() != 'content-length':  # Skip content-length as we set it
-                        self.send_header(header, value)
+                    self.send_header(header, value)
                 self.end_headers()
                 
+                # Send response body
                 self.wfile.write(response.data)
+                
+                # Debug output
+                if 'Set-Cookie' in response.headers:
+                    print(f"Response contains cookies: {response.headers.get_all('Set-Cookie')}")
         except Exception as e:
             print(f"Error handling GET request: {e}")
             self.send_response(500)
@@ -101,24 +142,48 @@ class handler(BaseHTTPRequestHandler):
                     db.create_all()
             except Exception as db_err:
                 print(f"Warning: Could not create tables for POST request: {db_err}")
-                # Continue anyway and see if it works
+            
+            # Extract cookies from request headers
+            cookies = {}
+            if 'Cookie' in self.headers:
+                cookie_header = self.headers['Cookie']
+                cookie_parts = cookie_header.split('; ')
+                for part in cookie_parts:
+                    if '=' in part:
+                        name, value = part.split('=', 1)
+                        cookies[name] = value
             
             # Handle the POST request using Flask's test client
             with app.test_client() as test_client:
+                # Set cookies in the test client
+                for name, value in cookies.items():
+                    test_client.set_cookie('', name, value)
+                
+                # Map the request to Flask
                 content_type = self.headers.get('Content-Type', '')
                 response = test_client.post(
                     self.path,
                     data=post_data,
-                    content_type=content_type
+                    content_type=content_type,
+                    headers={k: v for k, v in self.headers.items() if k not in ('Cookie', 'Host', 'Content-Length')}
                 )
                 
+                # Send response with status code
                 self.send_response(response.status_code)
+                
+                # Send headers, including cookies
                 for header, value in response.headers:
-                    if header.lower() != 'content-length':  # Skip content-length as we set it
-                        self.send_header(header, value)
+                    self.send_header(header, value)
                 self.end_headers()
                 
+                # Send response body
                 self.wfile.write(response.data)
+                
+                # Debug output for login requests
+                if '/login' in self.path:
+                    print(f"Login response status: {response.status_code}")
+                    if 'Set-Cookie' in response.headers:
+                        print(f"Login response contains cookies: {response.headers.get_all('Set-Cookie')}")
         except Exception as e:
             print(f"Error handling POST request: {e}")
             self.send_response(500)
