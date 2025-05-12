@@ -80,7 +80,7 @@ class Transaction(db.Model):
     amount = db.Column(db.Float, nullable=False)
     type = db.Column(db.String(20), nullable=False)  # 'credit' or 'debit'
     description = db.Column(db.String(256))
-    mpesa_reference = db.Column(db.String(64), unique=True)
+    mpesa_reference = db.Column(db.String(64), unique=True, nullable=True)  # Allow null for non-MPESA transactions
     status = db.Column(db.String(20), default='pending')  # pending, completed, failed
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
