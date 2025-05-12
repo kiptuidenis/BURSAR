@@ -36,11 +36,19 @@ def create_app(config_class=Config):
     # Add current_user to template context
     @app.context_processor
     def inject_user():
-        return dict(current_user=current_user)
-
-    # Register main route
+        return dict(current_user=current_user)    # Register main route
     @app.route('/')
     def home():
         return render_template('home.html')
+    
+    # Add health check endpoint for Vercel
+    @app.route('/api/health')
+    def health_check():
+        return {"status": "ok", "message": "BURSAR API is running"}, 200
+        
+    # Add simple API test endpoint
+    @app.route('/api/test')
+    def test_api():
+        return {"status": "ok", "message": "API test successful"}, 200
 
     return app
