@@ -1,4 +1,5 @@
-from flask import Flask
+from flask import Flask, Request, Response
+from http.server import BaseHTTPRequestHandler
 import sys
 import os
 import json
@@ -30,12 +31,35 @@ class VercelConfig:
 # Create Flask application with Vercel config
 app = create_app(VercelConfig)
 
-# This is the handler that Vercel serverless functions use - MUST be named 'handler'
-def handler(request, context):
-    """
-    Simple handler function for Vercel serverless
-    
-    This just returns the Flask app as an ASGI application
-    """
-    # Just return the Flask app - Vercel will handle the rest
-    return app
+# Handler class for Vercel - This MUST be named 'handler'
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        
+        # Use Flask test client to handle the request
+        with app.test_client() as test_client:
+            # Map the path from the request to Flask
+            response = test_client.get(self.path)
+            self.wfile.write(response.data)
+        return
+
+    def do_POST(self):
+        content_length = int(self.headers.get('Content-Length', 0))
+        post_data = self.rfile.read(content_length)
+        
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        
+        # Handle the POST request using Flask's test client
+        with app.test_client() as test_client:
+            content_type = self.headers.get('Content-Type', '')
+            response = test_client.post(
+                self.path,
+                data=post_data,
+                content_type=content_type
+            )
+            self.wfile.write(response.data)
+        return
