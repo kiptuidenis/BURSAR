@@ -1,0 +1,11 @@
+{
+  "name": "bursar-app",
+  "version": "1.0.0",
+  "description": "BURSAR Flask Application",
+  "scripts": {
+    "build": "bash build_files.sh"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}

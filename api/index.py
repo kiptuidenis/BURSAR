@@ -3,6 +3,7 @@ from http.server import BaseHTTPRequestHandler
 import sys
 import os
 import json
+import traceback
 
 # Add the parent directory to sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -21,6 +22,7 @@ class VercelConfig:
     
     # Flask settings
     DEBUG = False
+    TESTING = False
     WTF_CSRF_ENABLED = False  # Disable CSRF for serverless environment
     
     # Session settings for serverless
@@ -50,13 +52,13 @@ class VercelConfig:
 # Create Flask application with Vercel config
 app = create_app(VercelConfig)
 
-# Create database tables for SQLite in-memory database
+# Initialize database on startup
 try:
     with app.app_context():
         # Import models to ensure they're registered with SQLAlchemy
         from app.models import User, BudgetCategory, Transaction
         
-        # Create all tables first
+        # Create all tables
         db.create_all()
         print("Database tables created for Vercel environment")
         
@@ -70,10 +72,11 @@ try:
             print("Continuing without sample data - application will still work")
 except Exception as e:
     print(f"Error during database initialization: {e}")
-    # This is critical, but we'll let the app continue and see if it works
+    traceback.print_exc()
 
 # Handler class for Vercel - This MUST be named 'handler'
-class handler(BaseHTTPRequestHandler):    def do_GET(self):
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
         try:
             # In serverless context, the database is recreated for each request
             # So we need to ensure the tables exist
@@ -83,7 +86,6 @@ class handler(BaseHTTPRequestHandler):    def do_GET(self):
                     db.create_all()
             except Exception as db_err:
                 print(f"Warning: Could not create tables for GET request: {db_err}")
-                # Continue anyway and see if it works
             
             # Extract cookies from request headers
             cookies = {}
@@ -104,7 +106,8 @@ class handler(BaseHTTPRequestHandler):    def do_GET(self):
                 # Map the path from the request to Flask
                 response = test_client.get(
                     self.path, 
-                    headers={k: v for k, v in self.headers.items() if k not in ('Cookie', 'Host', 'Content-Length')}
+                    headers={k: v for k, v in self.headers.items() 
+                             if k.lower() not in ('cookie', 'host', 'content-length')}
                 )
                 
                 # Send response with status code
@@ -118,15 +121,31 @@ class handler(BaseHTTPRequestHandler):    def do_GET(self):
                 # Send response body
                 self.wfile.write(response.data)
                 
-                # Debug output
-                if 'Set-Cookie' in response.headers:
-                    print(f"Response contains cookies: {response.headers.get_all('Set-Cookie')}")
         except Exception as e:
             print(f"Error handling GET request: {e}")
+            traceback.print_exc()
             self.send_response(500)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            error_message = f"<html><body><h1>Server Error</h1><p>{str(e)}</p></body></html>"
+            error_message = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Server Error</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; padding: 20px; }}
+                    .error {{ background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 4px; }}
+                </style>
+            </head>
+            <body>
+                <h1>Server Error</h1>
+                <div class="error">
+                    <p>An error occurred while processing your request. Please try again later.</p>
+                    <p>Error details: {str(e)}</p>
+                </div>
+            </body>
+            </html>
+            """
             self.wfile.write(error_message.encode('utf-8'))
         return
 
@@ -166,7 +185,8 @@ class handler(BaseHTTPRequestHandler):    def do_GET(self):
                     self.path,
                     data=post_data,
                     content_type=content_type,
-                    headers={k: v for k, v in self.headers.items() if k not in ('Cookie', 'Host', 'Content-Length')}
+                    headers={k: v for k, v in self.headers.items() 
+                             if k.lower() not in ('cookie', 'host', 'content-length')}
                 )
                 
                 # Send response with status code
@@ -187,9 +207,28 @@ class handler(BaseHTTPRequestHandler):    def do_GET(self):
                         print(f"Login response contains cookies: {response.headers.get_all('Set-Cookie')}")
         except Exception as e:
             print(f"Error handling POST request: {e}")
+            traceback.print_exc()
             self.send_response(500)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            error_message = f"<html><body><h1>Server Error</h1><p>{str(e)}</p></body></html>"
+            error_message = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Server Error</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; padding: 20px; }}
+                    .error {{ background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 4px; }}
+                </style>
+            </head>
+            <body>
+                <h1>Server Error</h1>
+                <div class="error">
+                    <p>An error occurred while processing your request. Please try again later.</p>
+                    <p>Error details: {str(e)}</p>
+                </div>
+            </body>
+            </html>
+            """
             self.wfile.write(error_message.encode('utf-8'))
         return

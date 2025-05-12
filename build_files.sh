@@ -1,12 +1,19 @@
 #!/bin/bash
+set -e
 
-# Install dependencies
+echo "Starting build process..."
+
+# Create required directories
+mkdir -p staticfiles
+mkdir -p public
+
+# Install Python dependencies
 pip install -r requirements.txt
 
-# Collect static files
+# Run static file collection using Python script
 python collect_static.py
 
-# Make build_files.sh executable
-chmod +x build_files.sh
+# Create a backup of index.html in staticfiles for fallback
+cp public/index.html staticfiles/index.html 2>/dev/null || echo "No public/index.html to copy"
 
 echo "Build completed successfully"
