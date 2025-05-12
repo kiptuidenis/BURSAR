@@ -25,6 +25,7 @@ class VercelConfig:
     
     # Session settings for serverless
     SESSION_TYPE = 'filesystem'
+    SESSION_FILE_DIR = '/tmp/flask_session'  # Use /tmp directory in Vercel
     PERMANENT_SESSION_LIFETIME = 3600 * 24 * 30  # 30 days in seconds
     SESSION_PERMANENT = True
     SESSION_USE_SIGNER = True

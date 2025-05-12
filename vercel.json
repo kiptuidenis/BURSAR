@@ -3,20 +3,24 @@
   "builds": [
     {
       "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": { 
-        "maxLambdaSize": "15mb",
-        "runtime": "python3.9"
+      "use": "@vercel/python"
+    },
+    {
+      "src": "build_files.sh",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "staticfiles"
       }
     }
   ],
   "routes": [
-    { "src": "/static/(.*)", "dest": "/app/static/$1" },
-    { "src": "/(.*)", "dest": "api/index.py" }
-  ],
-  "env": {
-    "PYTHONPATH": ".",
-    "VERCEL": "1",
-    "FLASK_ENV": "production"
-  }
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "api/index.py"
+    }
+  ]
 }

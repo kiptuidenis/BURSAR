@@ -32,6 +32,19 @@ def create_app(config_class=Config):
         app.config['REMEMBER_COOKIE_SECURE'] = True
         app.config['REMEMBER_COOKIE_HTTPONLY'] = True
         app.config['REMEMBER_COOKIE_SAMESITE'] = 'Lax'
+    else:
+        # Configure session for local development
+        app.config['SESSION_TYPE'] = 'filesystem'
+        app.config['SESSION_PERMANENT'] = True
+        app.config['SESSION_USE_SIGNER'] = True
+        # Don't use secure cookies in development
+        app.config['SESSION_COOKIE_SECURE'] = False
+        app.config['SESSION_COOKIE_HTTPONLY'] = True
+        app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+        app.config['REMEMBER_COOKIE_DURATION'] = 3600 * 24 * 30  # 30 days
+        app.config['REMEMBER_COOKIE_SECURE'] = False
+        app.config['REMEMBER_COOKIE_HTTPONLY'] = True
+        app.config['REMEMBER_COOKIE_SAMESITE'] = 'Lax'
         
     # Initialize session after app config
     server_session.init_app(app)

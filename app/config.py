@@ -23,8 +23,17 @@ class Config:
                 # Create directory with full permissions
                 os.makedirs(instance_path, exist_ok=True)
                 print(f"Created instance directory at {instance_path}")
+                
+            # Create session directory
+            session_dir = os.path.join(instance_path, 'flask_session')
+            if not os.path.exists(session_dir):
+                os.makedirs(session_dir, exist_ok=True)
+                print(f"Created session directory at {session_dir}")
         except Exception as e:
-            print(f"Error creating instance directory: {e}")
+            print(f"Error creating directories: {e}")
+    
+    # Session file directory
+    SESSION_FILE_DIR = os.path.join(instance_path, 'flask_session')
     
     # Database Configuration - use in-memory SQLite for Vercel
     if is_vercel:
@@ -36,6 +45,7 @@ class Config:
     
     # Session Configuration
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
+    SESSION_TYPE = 'filesystem'  # Default session type
     
     # MPESA Configuration
     MPESA_CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY')
