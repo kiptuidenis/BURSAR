@@ -7,8 +7,8 @@ import json
 # Add the parent directory to sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Import the Flask app
-from app import create_app
+# Import the Flask app and db
+from app import create_app, db
 
 # Create app config for Vercel serverless
 class VercelConfig:
@@ -31,12 +31,29 @@ class VercelConfig:
 # Create Flask application with Vercel config
 app = create_app(VercelConfig)
 
+# Create database tables for SQLite in-memory database
+with app.app_context():
+    # Import models to ensure they're registered with SQLAlchemy
+    from app.models import User, BudgetCategory, Transaction
+    # Import the database initialization function
+    from app.init_vercel_db import init_vercel_db
+    
+    # Initialize the database with tables and sample data
+    init_vercel_db()
+    print("Database initialized for Vercel environment")
+
 # Handler class for Vercel - This MUST be named 'handler'
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
+        
+        # In serverless context, the database is recreated for each request
+        # So we need to ensure the tables exist
+        with app.app_context():
+            # Make sure tables exist
+            db.create_all()
         
         # Use Flask test client to handle the request
         with app.test_client() as test_client:
@@ -52,6 +69,12 @@ class handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
+        
+        # In serverless context, the database is recreated for each request
+        # So we need to ensure the tables exist
+        with app.app_context():
+            # Make sure tables exist
+            db.create_all()
         
         # Handle the POST request using Flask's test client
         with app.test_client() as test_client:
