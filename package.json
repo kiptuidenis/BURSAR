@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "BURSAR Flask Application",
   "scripts": {
-    "build": "bash build_files.sh"
+    "build": "node vercel-build.js"
   },
   "engines": {
     "node": "18.x"
