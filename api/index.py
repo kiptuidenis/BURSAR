@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask
 import sys
 import os
 import json
@@ -30,42 +30,12 @@ class VercelConfig:
 # Create Flask application with Vercel config
 app = create_app(VercelConfig)
 
-# Simple HTTP handler function - this is critical for Vercel serverless
-def handler(event, context):
+# This is the handler that Vercel serverless functions use - MUST be named 'handler'
+def handler(request, context):
     """
-    Serverless function handler for Vercel
+    Simple handler function for Vercel serverless
     
-    This is a simple handler that returns the Flask WSGI app
+    This just returns the Flask app as an ASGI application
     """
-    try:
-        # For direct invocation and health checks
-        if event.get('path') == '/api/health':
-            return {
-                "statusCode": 200,
-                "body": json.dumps({
-                    "status": "ok",
-                    "message": "API is running"
-                }),
-                "headers": {
-                    "Content-Type": "application/json"
-                }
-            }
-            
-        # Normally just return the Flask app
-        return app
-        
-    except Exception as e:
-        # Return error information to help with debugging
-        error_msg = str(e)
-        return {
-            "statusCode": 500,
-            "body": json.dumps({
-                "error": error_msg,
-                "message": "An error occurred in the handler function"
-            }),
-            "headers": {
-                "Content-Type": "application/json"
-            }
-        }
-            "body": response.data.decode('utf-8')
-        }
+    # Just return the Flask app - Vercel will handle the rest
+    return app
