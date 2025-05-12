@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_login import login_required, current_user
-from ..models import db, BudgetCategory, Transaction
+import json
+from ..models import db, BudgetCategory, Transaction, User
 from ..services.mpesa_service import MPESAService
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -29,12 +30,23 @@ def mpesa_result():
 @login_required
 def initiate_deposit():
     """Initiate M-Pesa STK Push for deposit"""
+    from ..services.ngrok_tunnel import get_public_url
+    
+    # Try to get ngrok URL if in development
+    base_url = current_app.config.get('BASE_URL')
+    if current_app.debug:
+        ngrok_url = get_public_url()
+        if ngrok_url:
+            base_url = ngrok_url
+            current_app.logger.info(f"Using ngrok URL for callbacks: {base_url}")
+    
     mpesa_service = MPESAService()
     
     try:
+        # Set minimum deposit amount to 10 KES
         result = mpesa_service.initiate_stk_push(
             phone_number=current_user.phone_number,
-            amount=0  # Amount will be entered by user on their phone
+            amount=10  # Minimum amount for testing
         )
         
         if result.get('success'):
@@ -86,6 +98,54 @@ def check_deposit_status(checkout_request_id):
             'success': False,
             'message': 'An error occurred while checking the transaction status'
         }), 500
+
+@api_bp.route('/mpesa/stk/callback', methods=['POST'])
+def mpesa_stk_callback():
+    """Handle MPESA STK Push callback"""
+    try:
+        data = request.get_json()
+        current_app.logger.info(f"STK Callback received: {json.dumps(data)}")
+        
+        # Extract callback metadata
+        callback_metadata = {}
+        if 'Body' in data and 'stkCallback' in data['Body']:
+            stk_callback = data['Body']['stkCallback']
+            if stk_callback.get('ResultCode') == 0:
+                # Transaction successful
+                if 'CallbackMetadata' in stk_callback and 'Item' in stk_callback['CallbackMetadata']:
+                    for item in stk_callback['CallbackMetadata']['Item']:
+                        if item['Name'] == 'Amount':
+                            callback_metadata['amount'] = item['Value']
+                        elif item['Name'] == 'MpesaReceiptNumber':
+                            callback_metadata['receipt_no'] = item['Value']
+                        elif item['Name'] == 'PhoneNumber':
+                            callback_metadata['phone_number'] = item['Value']
+                
+                # Find user by phone number
+                phone = f"+{callback_metadata.get('phone_number')}"
+                user = User.query.filter_by(phone_number=phone).first()
+                
+                if user and 'amount' in callback_metadata:
+                    # Create deposit transaction
+                    transaction = Transaction(
+                        user_id=user.id,
+                        amount=float(callback_metadata.get('amount')),
+                        type='credit',
+                        description=f"M-Pesa Deposit: {callback_metadata.get('receipt_no')}",
+                        mpesa_reference=callback_metadata.get('receipt_no'),
+                        status='completed'
+                    )
+                    
+                    db.session.add(transaction)
+                    db.session.commit()
+                    
+                    current_app.logger.info(f"Deposit recorded: {transaction}")
+        
+        return jsonify({'status': 'success'}), 200
+    
+    except Exception as e:
+        current_app.logger.error(f"Error processing STK callback: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @api_bp.route('/budget/categories', methods=['GET', 'POST'])
 @login_required

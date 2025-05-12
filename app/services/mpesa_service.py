@@ -1,17 +1,19 @@
 import requests
 import base64
+import json
 from datetime import datetime
 from flask import current_app
 from ..models import Transaction, User
 
 class MPESAService:
-    def __init__(self):
+    def __init__(self, base_url=None):
         self.consumer_key = current_app.config['MPESA_CONSUMER_KEY']
         self.consumer_secret = current_app.config['MPESA_CONSUMER_SECRET']
         self.api_url = current_app.config['MPESA_API_URL']
         self.business_shortcode = current_app.config['MPESA_BUSINESS_SHORTCODE']
         self.passkey = current_app.config['MPESA_PASSKEY']
         self.security_credential = current_app.config['MPESA_SECURITY_CREDENTIAL']
+        self.base_url = base_url or current_app.config['BASE_URL']
         
     def _generate_auth_token(self):
         """Generate OAuth token for MPESA API"""
@@ -55,30 +57,39 @@ class MPESAService:
             "Password": password,
             "Timestamp": timestamp,
             "TransactionType": "CustomerPayBillOnline",
-            "Amount": str(amount),
-            "PartyA": phone_number.replace('+', ''),
+            "Amount": str(amount),            "PartyA": phone_number.replace('+', ''),
             "PartyB": self.business_shortcode,
             "PhoneNumber": phone_number.replace('+', ''),
-            "CallBackURL": f"{current_app.config['BASE_URL']}/api/mpesa/stk/callback",
+            "CallBackURL": f"{self.base_url}/api/mpesa/stk/callback",
             "AccountReference": "Bursar Deposit",
-            "TransactionDesc": "Deposit to Bursar account" 
+            "TransactionDesc": "Deposit to Bursar account"
         }
         
         try:
+            current_app.logger.info(f"STK Push payload: {json.dumps(payload)}")
+            current_app.logger.info(f"STK Push URL: {self.api_url}/mpesa/stkpush/v1/processrequest")
+            
             response = requests.post(
                 f"{self.api_url}/mpesa/stkpush/v1/processrequest",
                 json=payload,
                 headers=headers
             )
+            
+            # Log response status and content
+            current_app.logger.info(f"STK Push response status: {response.status_code}")
+            current_app.logger.info(f"STK Push response content: {response.text}")
+            
             response.raise_for_status()
             result = response.json()
             
             if result.get('ResponseCode') == '0':
+                current_app.logger.info(f"STK Push successful: {json.dumps(result)}")
                 return {
                     'success': True,
                     'CheckoutRequestID': result.get('CheckoutRequestID')
                 }
             
+            current_app.logger.error(f"STK Push failed: {json.dumps(result)}")
             return {
                 'success': False,
                 'error': result.get('ResponseDescription', 'Failed to initiate STK push')
