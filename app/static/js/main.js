@@ -424,39 +424,11 @@ function showAlert(message, type = 'info') {
     setTimeout(() => alert.remove(), 5000);
 }
 
-// BudgetManager Object for budget-related functionality
+// Budget Manager Object
 const BudgetManager = {
-    getCurrentMonth: function() {
-        const now = new Date();
-        return now.getMonth() + 1; // JavaScript months are 0-indexed
-    },
-    
-    getCurrentMonthName: function() {
-        const now = new Date();
-        return now.toLocaleString('default', { month: 'long' });
-    },
-    
-    formatCurrency: function(amount) {
-        return parseFloat(amount).toFixed(2);
-    }
-};
-
-// MPESAManager Object for M-Pesa related functionality
-const MPESAManager = {
-    initiateDeposit: function(amount) {
-        return fetch('/api/mpesa/deposit', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ amount: amount })
-        })
-        .then(response => response.json());
-    },
-    
-    checkStatus: function(checkoutRequestID) {
-        return fetch(`/api/mpesa/deposit/status/${checkoutRequestID}`)
-            .then(response => response.json());
+    // Budget management functions
+    updateBudget: function(amount) {
+        console.log('Budget updated with amount:', amount);
     }
 };
 

@@ -164,19 +164,13 @@
         depositBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
         depositBtn.disabled = true;
         
-        // Default deposit amount (10 KES)
-        const depositAmount = 10;
-        
         // Call the API to initiate STK push
         fetch('/api/mpesa/deposit', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({
-                amount: depositAmount
-            })
+            }
         })
         .then(response => response.json())
         .then(data => {

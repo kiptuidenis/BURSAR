@@ -32,28 +32,6 @@ def initiate_deposit():
     """Initiate M-Pesa STK Push for deposit"""
     from ..services.ngrok_tunnel import get_public_url
     
-    # Validate user has a phone number
-    if not current_user.phone_number:
-        return jsonify({
-            'success': False,
-            'message': 'Please update your profile with a valid phone number'
-        }), 400
-    
-    # Format phone number if needed
-    phone_number = current_user.phone_number
-    if not phone_number.startswith('254'):
-        # If it starts with +, remove it
-        phone_number = phone_number.replace('+', '')
-        # If it starts with 0, replace with 254
-        if phone_number.startswith('0'):
-            phone_number = '254' + phone_number[1:]
-        # If it doesn't start with 254, add it
-        if not phone_number.startswith('254'):
-            phone_number = '254' + phone_number
-    
-    # Log the phone number being used
-    current_app.logger.info(f"Initiating deposit for phone: {phone_number}")
-    
     # Try to get ngrok URL if in development
     base_url = current_app.config.get('BASE_URL')
     if current_app.debug:
@@ -62,25 +40,13 @@ def initiate_deposit():
             base_url = ngrok_url
             current_app.logger.info(f"Using ngrok URL for callbacks: {base_url}")
     
-    # Get amount from request or use default
-    try:
-        data = request.get_json() or {}
-        amount = data.get('amount', 10)  # Default to 10 KES if not specified
-        # Ensure amount is at least 10 KES
-        amount = max(10, float(amount))
-    except (ValueError, TypeError):
-        amount = 10  # Default to 10 KES if there's an error
-    
-    current_app.logger.info(f"Deposit amount: {amount} KES")
+    mpesa_service = MPESAService()
     
     try:
-        # Create MPESAService with the base_url
-        mpesa_service = MPESAService(base_url)
-        
-        # Initiate STK push
+        # Set minimum deposit amount to 10 KES
         result = mpesa_service.initiate_stk_push(
-            phone_number=phone_number,
-            amount=amount
+            phone_number=current_user.phone_number,
+            amount=10  # Minimum amount for testing
         )
         
         if result.get('success'):
@@ -90,9 +56,6 @@ def initiate_deposit():
                 'checkoutRequestID': result.get('CheckoutRequestID')
             })
         
-        # Log the error details
-        current_app.logger.error(f"STK push failed: {result}")
-        
         return jsonify({
             'success': False,
             'message': result.get('error', 'Failed to initiate deposit')
@@ -100,19 +63,6 @@ def initiate_deposit():
         
     except Exception as e:
         current_app.logger.error(f"Error initiating deposit: {str(e)}")
-        
-        # In development mode, return more detailed error
-        if current_app.debug:
-            return jsonify({
-                'success': False,
-                'message': f'Error: {str(e)}',
-                'debug_info': {
-                    'phone_number': phone_number,
-                    'amount': amount,
-                    'base_url': base_url
-                }
-            }), 500
-        
         return jsonify({
             'success': False,
             'message': 'An error occurred while processing your request'
