@@ -1,18 +1,8 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, Form
+from wtforms import StringField, PasswordField, BooleanField
 from wtforms.validators import DataRequired, Length, EqualTo, Regexp
-import os
 
-# Create a base form class that checks for Vercel environment
-# If in Vercel, use regular Form without CSRF, otherwise use FlaskForm with CSRF
-if os.environ.get('VERCEL') == '1':
-    BaseForm = Form  # Use WTForms Form without CSRF for Vercel
-    print("Using WTForms Form without CSRF for Vercel environment")
-else:
-    BaseForm = FlaskForm  # Use FlaskForm with CSRF for local development
-    print("Using FlaskForm with CSRF for local environment")
-
-class RegistrationForm(BaseForm):
+class RegistrationForm(FlaskForm):
     phone = StringField('Phone Number', validators=[
         DataRequired(),
         Regexp(r'^[0-9]{9}$', message="Please enter 9 digits without country code")
@@ -31,7 +21,7 @@ class RegistrationForm(BaseForm):
         DataRequired(message="You must agree to the Terms of Service")
     ])
 
-class LoginForm(BaseForm):
+class LoginForm(FlaskForm):
     phone = StringField('Phone Number', validators=[
         DataRequired(),
         Regexp(r'^[0-9]{9}$', message="Please enter 9 digits without country code")
@@ -41,7 +31,7 @@ class LoginForm(BaseForm):
     ])
     remember = BooleanField('Remember Me')
 
-class ProfileForm(BaseForm):
+class ProfileForm(FlaskForm):
     phone_number = StringField('Phone Number', validators=[
         DataRequired(),
         Regexp(r'^[0-9]{9}$', message="Please enter 9 digits without country code")

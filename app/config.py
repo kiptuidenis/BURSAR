@@ -10,37 +10,33 @@ class Config:
     # Get the absolute path to the project root directory
     basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     
-    # Check if running in Vercel environment
-    is_vercel = os.environ.get('VERCEL') == '1'
+    # Check if running in production environment
+    is_production = os.environ.get('FLASK_ENV') == 'production'
     
     # Define instance path
     instance_path = os.path.join(basedir, 'instance')
     
-    # Only try to create directory if not in Vercel environment
-    if not is_vercel:
-        try:
-            if not os.path.exists(instance_path):
-                # Create directory with full permissions
-                os.makedirs(instance_path, exist_ok=True)
-                print(f"Created instance directory at {instance_path}")
-                
-            # Create session directory
-            session_dir = os.path.join(instance_path, 'flask_session')
-            if not os.path.exists(session_dir):
-                os.makedirs(session_dir, exist_ok=True)
-                print(f"Created session directory at {session_dir}")
-        except Exception as e:
-            print(f"Error creating directories: {e}")
+    # Create necessary directories
+    try:
+        if not os.path.exists(instance_path):
+            # Create directory with full permissions
+            os.makedirs(instance_path, exist_ok=True)
+            print(f"Created instance directory at {instance_path}")
+            
+        # Create session directory
+        session_dir = os.path.join(instance_path, 'flask_session')
+        if not os.path.exists(session_dir):
+            os.makedirs(session_dir, exist_ok=True)
+            print(f"Created session directory at {session_dir}")
+    except Exception as e:
+        print(f"Error creating directories: {e}")
     
     # Session file directory
     SESSION_FILE_DIR = os.path.join(instance_path, 'flask_session')
     
-    # Database Configuration - use in-memory SQLite for Vercel
-    if is_vercel:
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
-    else:
-        db_path = os.path.join(instance_path, 'app.db')
-        SQLALCHEMY_DATABASE_URI = f'sqlite:///{db_path}'
+    # Database Configuration
+    db_path = os.path.join(instance_path, 'app.db')
+    SQLALCHEMY_DATABASE_URI = f'sqlite:///{db_path}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Session Configuration
@@ -55,7 +51,7 @@ class Config:
     MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY')
     MPESA_SECURITY_CREDENTIAL = os.environ.get('MPESA_SECURITY_CREDENTIAL')
     
-    # Security Configuration for Vercel serverless environment
-    WTF_CSRF_ENABLED = not is_vercel  # Disable CSRF in Vercel environment to avoid session issues
-    WTF_CSRF_TIME_LIMIT = None  # No time limit for CSRF tokens when they are enabled
-    WTF_CSRF_SSL_STRICT = False  # Don't enforce HTTPS for CSRF tokens (development setting)
+    # Security Configuration
+    WTF_CSRF_ENABLED = True  # Enable CSRF protection
+    WTF_CSRF_TIME_LIMIT = 3600  # 1 hour time limit for CSRF tokens
+    WTF_CSRF_SSL_STRICT = is_production  # Enforce HTTPS for CSRF tokens in production

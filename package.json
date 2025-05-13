@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "BURSAR Flask Application",
   "scripts": {
-    "build": "node vercel-build.js"
-  },
-  "engines": {
-    "node": "18.x"
+    "start": "python run.py"
   }
 }

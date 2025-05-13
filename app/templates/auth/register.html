@@ -10,9 +10,7 @@
                 <h2 class="text-center mb-4">Create Account</h2>
                 
                 <form method="POST" action="{{ url_for('auth.register') }}" id="registrationForm">
-                    {% if form.hidden_tag is defined %}
-                        {{ form.hidden_tag() }}
-                    {% endif %}
+                    {{ form.hidden_tag() }}
                     
                     <!-- Phone Number Field -->
                     <div class="mb-3">
