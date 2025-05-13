@@ -1,4 +1,4 @@
-from flask import Flask, Response
+from flask import Flask, Response, send_from_directory
 from http.server import BaseHTTPRequestHandler
 import os
 
@@ -10,6 +10,14 @@ from app.routes import *
 
 # Configure app settings
 app.debug = os.environ.get('DEBUG', 'False').lower() == 'true'
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(
+        os.path.join(app.root_path, 'static'),
+        'favicon.ico',
+        mimetype='image/vnd.microsoft.icon'
+    )
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):

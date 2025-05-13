@@ -17,6 +17,14 @@ try {
   const sourceDir = path.join(process.cwd(), 'app', 'static');
   const destDir = path.join(process.cwd(), 'staticfiles');
 
+  // Ensure favicon.ico exists
+  const faviconSource = path.join(sourceDir, 'favicon.ico');
+  const faviconDest = path.join(destDir, 'favicon.ico');
+  if (!fs.existsSync(faviconSource)) {
+    console.log('Creating default favicon.ico...');
+    fs.writeFileSync(faviconSource, Buffer.from(''));
+  }
+
   // Copy static files if source directory exists
   if (fs.existsSync(sourceDir)) {
     console.log('Copying static files...');
