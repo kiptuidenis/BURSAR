@@ -155,5 +155,138 @@
             delete document.getElementById('categoryForm').dataset.categoryId;
         });
     });
+
+    // Function to initiate M-Pesa deposit
+    function initiateDeposit() {
+        // Show loading state
+        const depositBtn = document.querySelector('button[onclick="initiateDeposit()"]');
+        const originalBtnText = depositBtn.innerHTML;
+        depositBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+        depositBtn.disabled = true;
+        
+        // Default deposit amount (10 KES)
+        const depositAmount = 10;
+        
+        // Call the API to initiate STK push
+        fetch('/api/mpesa/deposit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                amount: depositAmount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('success', data.message);
+                
+                // Start polling for status updates
+                if (data.checkoutRequestID) {
+                    pollDepositStatus(data.checkoutRequestID);
+                }
+            } else {
+                showAlert('danger', data.message || 'Failed to initiate deposit');
+                // Reset button
+                depositBtn.innerHTML = originalBtnText;
+                depositBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'An error occurred while processing your request');
+            // Reset button
+            depositBtn.innerHTML = originalBtnText;
+            depositBtn.disabled = false;
+        });
+    }
+    
+    // Function to poll deposit status
+    function pollDepositStatus(checkoutRequestID) {
+        let attempts = 0;
+        const maxAttempts = 10;
+        const interval = 5000; // 5 seconds
+        
+        const statusCheck = setInterval(() => {
+            attempts++;
+            
+            fetch(`/api/mpesa/deposit/status/${checkoutRequestID}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Transaction completed successfully
+                    clearInterval(statusCheck);
+                    showAlert('success', data.message || 'Deposit completed successfully');
+                    
+                    // Reset button and reload page to show updated balance
+                    const depositBtn = document.querySelector('button[onclick="initiateDeposit()"]');
+                    depositBtn.innerHTML = '<i class="fas fa-wallet me-2"></i>Deposit';
+                    depositBtn.disabled = false;
+                    
+                    // Reload the page after a short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else if (data.pending) {
+                    // Transaction still pending, continue polling
+                    console.log('Deposit pending, continuing to check...');
+                } else {
+                    // Transaction failed
+                    clearInterval(statusCheck);
+                    showAlert('danger', data.message || 'Deposit failed');
+                    
+                    // Reset button
+                    const depositBtn = document.querySelector('button[onclick="initiateDeposit()"]');
+                    depositBtn.innerHTML = '<i class="fas fa-wallet me-2"></i>Deposit';
+                    depositBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error checking status:', error);
+                
+                // If max attempts reached, stop polling
+                if (attempts >= maxAttempts) {
+                    clearInterval(statusCheck);
+                    showAlert('warning', 'Could not confirm deposit status. Please check your M-Pesa messages.');
+                    
+                    // Reset button
+                    const depositBtn = document.querySelector('button[onclick="initiateDeposit()"]');
+                    depositBtn.innerHTML = '<i class="fas fa-wallet me-2"></i>Deposit';
+                    depositBtn.disabled = false;
+                }
+            });
+            
+            // If max attempts reached, stop polling
+            if (attempts >= maxAttempts) {
+                clearInterval(statusCheck);
+            }
+        }, interval);
+    }
+    
+    // Function to show alerts
+    function showAlert(type, message) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertId = 'alert-' + Date.now();
+        
+        const alertHTML = `
+            <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        
+        alertContainer.innerHTML += alertHTML;
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            const alertElement = document.getElementById(alertId);
+            if (alertElement) {
+                const bsAlert = new bootstrap.Alert(alertElement);
+                bsAlert.close();
+            }
+        }, 5000);
+    }
 </script>
 {% endblock %}

@@ -17,23 +17,47 @@ class MPESAService:
         
     def _generate_auth_token(self):
         """Generate OAuth token for MPESA API"""
+        # Log credentials being used (without exposing the full secret)
+        current_app.logger.info(f"Using consumer key: {self.consumer_key[:5]}...")
+        current_app.logger.info(f"API URL: {self.api_url}")
+        
         auth_string = f"{self.consumer_key}:{self.consumer_secret}"
         auth_bytes = auth_string.encode("ascii")
         encoded_auth = base64.b64encode(auth_bytes).decode('ascii')
         
         headers = {
-            'Authorization': f'Basic {encoded_auth}'
+            'Authorization': f'Basic {encoded_auth}',
+            'Content-Type': 'application/json'
         }
         
         try:
+            # Log the request details
+            url = f"{self.api_url}/oauth/v1/generate?grant_type=client_credentials"
+            current_app.logger.info(f"Making auth request to: {url}")
+            
             response = requests.get(
-                f"{self.api_url}/oauth/v1/generate?grant_type=client_credentials",
-                headers=headers
+                url,
+                headers=headers,
+                timeout=30  # Add timeout to prevent hanging
             )
+            
+            # Log response status and headers
+            current_app.logger.info(f"Auth response status: {response.status_code}")
+            
+            if response.status_code != 200:
+                current_app.logger.error(f"Auth error response: {response.text}")
+                
             response.raise_for_status()
-            return response.json()['access_token']
+            token_data = response.json()
+            current_app.logger.info("Successfully obtained auth token")
+            return token_data['access_token']
+            
         except requests.exceptions.RequestException as e:
             current_app.logger.error(f"Error generating MPESA auth token: {str(e)}")
+            # Return a dummy token for development/testing when API is unreachable
+            if current_app.debug:
+                current_app.logger.warning("Using dummy token for development")
+                return "dummy-token-for-development"
             raise
 
     def _generate_password(self):

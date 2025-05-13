@@ -50,6 +50,7 @@ class Config:
     MPESA_BUSINESS_SHORTCODE = os.environ.get('MPESA_BUSINESS_SHORTCODE')
     MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY')
     MPESA_SECURITY_CREDENTIAL = os.environ.get('MPESA_SECURITY_CREDENTIAL')
+    BASE_URL = os.environ.get('BASE_URL', 'http://localhost:5000')
     
     # Security Configuration
     WTF_CSRF_ENABLED = True  # Enable CSRF protection
