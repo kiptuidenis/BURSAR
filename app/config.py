@@ -55,5 +55,7 @@ class Config:
     MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY')
     MPESA_SECURITY_CREDENTIAL = os.environ.get('MPESA_SECURITY_CREDENTIAL')
     
-    # Security Configuration
-    WTF_CSRF_ENABLED = True
+    # Security Configuration for Vercel serverless environment
+    WTF_CSRF_ENABLED = not is_vercel  # Disable CSRF in Vercel environment to avoid session issues
+    WTF_CSRF_TIME_LIMIT = None  # No time limit for CSRF tokens when they are enabled
+    WTF_CSRF_SSL_STRICT = False  # Don't enforce HTTPS for CSRF tokens (development setting)
