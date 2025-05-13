@@ -1,75 +1,80 @@
-from flask import Flask, send_from_directory, render_template, redirect, url_for
+from flask import send_from_directory, render_template, redirect, url_for
 from http.server import BaseHTTPRequestHandler
 import os
 import sys
 import traceback
 
 # Set up root path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+root_dir = os.path.dirname(os.path.dirname(__file__))
+sys.path.insert(0, root_dir)
 
-# Create Flask app with correct static folder
-app = Flask(__name__, 
-    static_folder=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', 'static'),
-    template_folder=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', 'templates')
-)
-
-# Configure app settings
-app.debug = os.environ.get('DEBUG', 'False').lower() == 'true'
-app.secret_key = os.environ.get('SECRET_KEY', 'dev-key-for-sessions')
-
-# Register blueprints
+# Import the app factory function
 try:
-    from app.routes.user_routes import auth_bp
-    from app.routes.dashboard_routes import dashboard_bp
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(dashboard_bp)
-    print("Blueprints registered successfully")
+    # Set environment variable for Vercel detection
+    os.environ['VERCEL'] = '1'
+    
+    # Import the create_app function from the app package
+    from app import create_app
+    
+    # Create the Flask application using the factory function
+    app = create_app()
+    
+    print("Flask app created successfully with create_app()")
 except Exception as e:
-    print(f"Error registering blueprints: {str(e)}")
+    print(f"Error creating Flask app: {str(e)}")
     traceback.print_exc()
 
-# Favicon route
+# Add a fallback for favicon.ico in case the app factory doesn't handle it
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(
-        os.path.join(app.root_path, '..', 'app', 'static'),
-        'favicon.ico',
-        mimetype='image/x-icon'
-    )
+    try:
+        return send_from_directory(
+            os.path.join(root_dir, 'app', 'static'),
+            'favicon.ico',
+            mimetype='image/x-icon'
+        )
+    except Exception as e:
+        print(f"Error serving favicon: {str(e)}")
+        return '', 204  # No content if favicon can't be served
 
 # Also handle favicon.png (some browsers request this)
 @app.route('/favicon.png')
 def favicon_png():
-    return send_from_directory(
-        os.path.join(app.root_path, '..', 'app', 'static'),
-        'favicon.png',
-        mimetype='image/png'
-    )
-
-# Root route
-@app.route('/')
-def home():
-    return redirect(url_for('auth.login'))
-
-# Catch-all for static files
-@app.route('/static/<path:path>')
-def static_file(path):
-    return send_from_directory(app.static_folder, path)
-
-# Define error handlers
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template('404.html'), 404
-
-@app.errorhandler(500)
-def internal_server_error(e):
-    return render_template('500.html'), 500
+    try:
+        return send_from_directory(
+            os.path.join(root_dir, 'app', 'static'),
+            'favicon.png',
+            mimetype='image/png'
+        )
+    except Exception as e:
+        print(f"Error serving favicon.png: {str(e)}")
+        return '', 204  # No content if favicon can't be served
 
 # Vercel handler
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
-            # We don't need to handle favicon separately anymore as Flask will handle it
+            # Special handling for favicon paths to avoid Flask error
+            if self.path in ['/favicon.ico', '/favicon.png']:
+                favicon_path = os.path.join(root_dir, 'app', 'static', 
+                                          'favicon.ico' if self.path == '/favicon.ico' else 'favicon.png')
+                if os.path.exists(favicon_path):
+                    with open(favicon_path, 'rb') as f:
+                        favicon_data = f.read()
+                    
+                    mime_type = 'image/x-icon' if self.path == '/favicon.ico' else 'image/png'
+                    self.send_response(200)
+                    self.send_header('Content-Type', mime_type)
+                    self.send_header('Content-Length', str(len(favicon_data)))
+                    self.end_headers()
+                    self.wfile.write(favicon_data)
+                    return
+                else:
+                    # Return no content for missing favicons
+                    self.send_response(204)
+                    self.end_headers()
+                    return
+            
             # Use Flask test client to process the request
             with app.test_client() as test_client:
                 response = test_client.get(self.path)
@@ -89,7 +94,7 @@ class handler(BaseHTTPRequestHandler):
             print(f"Error handling GET request: {str(e)}")
             traceback.print_exc()
             
-            # Return a 500 error
+            # Return a 500 error with plain text
             self.send_response(500)
             self.send_header('Content-Type', 'text/plain')
             self.end_headers()
